@@ -7,17 +7,15 @@ type TokenBucket struct {
 	lastRefillTime time.Time
 	rate           float64
 	capacity       float64
-	lastReqTime    time.Time
+	LastReqTime    time.Time
 }
 
 func (t *TokenBucket) Allow() bool {
-
 	now := time.Now()
 
-	sinceLastReqTime := time.Since(t.lastReqTime).Seconds()
-	tokenCap := sinceLastReqTime * t.rate
-
-	if tokenCap > t.capacity {
+	elapsed := now.Sub(t.lastRefillTime).Seconds()
+	t.tokens += elapsed * t.rate
+	if t.tokens > t.capacity {
 		t.tokens = t.capacity
 	}
 
@@ -25,10 +23,10 @@ func (t *TokenBucket) Allow() bool {
 
 	if t.tokens >= 1 {
 		t.tokens -= 1
-		t.lastReqTime = now
+		t.LastReqTime = now
 		return true
 	}
 
-	t.lastReqTime = now
+	t.LastReqTime = now
 	return false
 }
